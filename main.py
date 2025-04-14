@@ -3,6 +3,7 @@
 import streamlit as st
 import pandas as pd
 import yfinance
+from datetime import timedelta
 
 # criar funções de carregamento de dados
     # cotação do Itau (ITUB4) 2010 a 2024
@@ -28,15 +29,32 @@ st.write('''
 
 # preparar visualizações  = filtros 
 
-lista_acoes = st.multiselect("Escolha as ações para visualização", dados.columns)
+# Criar uma sidebar
+
+st.sidebar.header("Filtros")
+
+
+# Filtro de ações
+lista_acoes = st.sidebar.multiselect("Escolha as ações para visualização", dados.columns)
 if lista_acoes:
     dados = dados[lista_acoes]
     if len(lista_acoes) == 1:
         acao_unica = lista_acoes[0]
         dados = dados.rename(columns={acao_unica: "Close"})
-    
+
+# Filtro de datas
+data_inicial = dados.index.min().to_pydatetime()
+data_final = dados.index.max().to_pydatetime()
+
+intervalo_data = st.sidebar.slider("Selecione o Período", 
+                                    min_value= data_inicial , 
+                                    max_value= data_final, 
+                                    value= (data_inicial, data_final),
+                                    step=timedelta(days=1))
+
+dados = dados.loc[intervalo_data[0]: intervalo_data[1]]
+
+
         
-
-
 # Criar o gráfico
 st.line_chart(dados)
